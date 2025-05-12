@@ -1,0 +1,9 @@
+spring:
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: eslam4gamal@gmail.com
+    password: zeut prjm asyx pmnq
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
