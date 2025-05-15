@@ -1,0 +1,32 @@
+package com.example.Transaction.Service;
+
+import com.example.Transaction.Model.Product;
+import com.example.Transaction.Repository.ProductRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.UUID;
+
+@Service
+public class ProductService {
+
+    ProductRepository repository;
+
+    @Autowired
+    public ProductService(ProductRepository repository) {
+        this.repository = repository;
+    }
+
+    public Product addProduct(Product product) {
+        return repository.save(product);
+    }
+
+    public Product getProduct(UUID productId) {
+        return repository.findById(productId).get();
+    }
+
+    public void deleteProduct(UUID productID)
+    {
+        repository.deleteById(productID);
+    }
+}

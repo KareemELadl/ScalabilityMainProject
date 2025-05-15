@@ -2,28 +2,34 @@ package com.example.Transaction.Model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import lombok.NoArgsConstructor;
+
+import java.util.UUID;
 
 @Entity
 @Table(name = "transaction_products")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class TransactionProduct {
-
     @Id
-    @GeneratedValue(generator = "UUID")
-    @Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "transaction_id", nullable = false, columnDefinition = "uuid")
+    private UUID transactionId;
 
-    @MapsId("transactionId")
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "transaction_id", nullable = false)
+    @Column(name = "product_id", nullable = false)
+    private Long productId;
+
+    @Column(nullable = false)
+    private Integer quantity;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "transaction_id", insertable = false, updatable = false)
     private Transaction transaction;
 
-    @MapsId("productId")
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "product_id", insertable = false, updatable = false)
     private Product product;
 }

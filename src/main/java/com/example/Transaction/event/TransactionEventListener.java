@@ -32,12 +32,12 @@ public class TransactionEventListener {
         );
     }
     @EventListener
-    public void handleTransactionRefunded(TransactionRefundedEvent event) {
+    public void handleTransactionRefunded(TransactionFailedEvent event) {
         Transaction txn = event.getTransaction();
         String html = receiptService.generateHtmlReceipt(txn);
         emailService.sendHtmlEmail(
                 txn.getCustomerEmail(),
-                "Your Refund Receipt",
+                "Your Transaction is FAILED",
                 html
         );
     }

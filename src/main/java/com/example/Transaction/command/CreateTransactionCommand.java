@@ -4,12 +4,12 @@ import com.example.Transaction.Model.Transaction;
 import com.example.Transaction.Model.TransactionStatus;
 import com.example.Transaction.Repository.TransactionRepository;
 import com.example.Transaction.event.TransactionCreatedEvent;
+import com.example.Transaction.event.TransactionFailedEvent;
 import com.example.Transaction.state.TransactionStateContext;
 import com.example.Transaction.strategy.PaymentStrategyFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.Instant;
-
 
 public class CreateTransactionCommand implements TransactionCommand {
     private final Transaction txn;
@@ -35,18 +35,36 @@ public class CreateTransactionCommand implements TransactionCommand {
 
     @Override
     public Transaction execute() {
+        // Initial PENDING transition
         stateContext.transition(txn, TransactionStatus.PENDING);
         txn.setCreatedAt(Instant.now());
         txn.setUpdatedAt(Instant.now());
         repo.save(txn);
 
-        factory.getStrategy(provider).charge(txn);
+        try {
+            // Attempt to charge via chosen provider
+            factory.getStrategy(provider).charge(txn);
 
-        stateContext.transition(txn, TransactionStatus.COMPLETED);
-        txn.setUpdatedAt(Instant.now());
-        repo.save(txn);
+            // On success -> COMPLETED
+            stateContext.transition(txn, TransactionStatus.COMPLETED);
+            txn.setUpdatedAt(Instant.now());
+            repo.save(txn);
 
-        publisher.publishEvent(new TransactionCreatedEvent(txn));
-        return txn;
+            // Publish creation event
+            publisher.publishEvent(new TransactionCreatedEvent(txn));
+            return txn;
+
+        } catch (Exception ex) {
+            // On failure -> FAILED
+            stateContext.transition(txn, TransactionStatus.FAILED);
+            txn.setUpdatedAt(Instant.now());
+            repo.save(txn);
+
+            // Publish failed event
+            publisher.publishEvent(new TransactionFailedEvent(txn, ex));
+
+            // Re-throw so callers see the error
+            throw ex;
+        }
     }
 }

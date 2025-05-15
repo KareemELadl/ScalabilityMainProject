@@ -1,5 +1,6 @@
 package com.example.Transaction.Controller;
 import com.example.Transaction.Model.Transaction;
+import com.example.Transaction.Model.TransactionProduct;
 import com.example.Transaction.Model.TransactionStatus;
 import com.example.Transaction.Service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,12 +8,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
+import java.util.Date;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @RestController
 @RequestMapping("/transactions")
 public class TransactionController {
 
     private final TransactionService service;
+
 
     @Autowired
     public TransactionController(TransactionService service) {
@@ -53,10 +57,34 @@ public class TransactionController {
         service.deleteTransaction(id);
         return ResponseEntity.noContent().build();
     }
-    @PostMapping("/{id}/items")
-    public ResponseEntity<Transaction> addItems(
-            @PathVariable UUID id,
-            @RequestBody List<String> items) {
-        return ResponseEntity.ok(service.addItems(id, items));
+    @PostMapping("/{transactionId}/items")
+    public ResponseEntity<TransactionProduct> addItem(
+            @PathVariable UUID transactionId,
+            @RequestParam Long productId,
+            @RequestParam int quantity
+    ) {
+        TransactionProduct item = service.addItem(transactionId, productId, quantity);
+        return ResponseEntity.ok(item);
     }
+    @GetMapping("/filter")
+    public ResponseEntity<?> filter(
+            @RequestParam UUID userId,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate)
+    {
+        if(startDate.after(endDate))
+        {
+            return ResponseEntity.badRequest().body("Start date must be before end date");
+        }
+        try
+        {
+            List<Transaction> transactions = service.filterByDate(userId, startDate, endDate);
+            return ResponseEntity.ok(transactions);
+        }
+        catch (Exception e)
+        {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 }

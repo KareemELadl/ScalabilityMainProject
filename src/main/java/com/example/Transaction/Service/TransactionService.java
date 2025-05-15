@@ -1,9 +1,12 @@
 package com.example.Transaction.Service;
 
 import com.example.Transaction.Model.Transaction;
+import com.example.Transaction.Model.TransactionProduct;
 import com.example.Transaction.Model.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,5 +21,7 @@ public interface TransactionService {
     void deleteTransaction(UUID transactionId);
 
     @Transactional
-    Transaction addItems(UUID transactionId, List<String> items);
+    TransactionProduct addItem(UUID transactionId, Long productId, int quantity);
+
+    List<Transaction> filterByDate(UUID userID, Date start, Date end);
 }

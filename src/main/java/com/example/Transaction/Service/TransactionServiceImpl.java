@@ -1,7 +1,9 @@
 package com.example.Transaction.Service;
 
 import com.example.Transaction.Model.Transaction;
+import com.example.Transaction.Model.TransactionProduct;
 import com.example.Transaction.Model.TransactionStatus;
+import com.example.Transaction.Repository.TransactionProductRepository;
 import com.example.Transaction.Repository.TransactionRepository;
 import com.example.Transaction.command.CreateTransactionCommand;
 import com.example.Transaction.command.DeleteTransactionCommand;
@@ -13,6 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,16 +28,19 @@ public class TransactionServiceImpl implements TransactionService {
     private final PaymentStrategyFactory strategyFactory;
     private final ApplicationEventPublisher publisher;
     private final TransactionStateContext stateContext;
+    private final TransactionProductRepository transactionProductRepo;
+
 
     @Autowired
     public TransactionServiceImpl(TransactionRepository repo,
                                   PaymentStrategyFactory strategyFactory,
                                   ApplicationEventPublisher publisher,
-                                  TransactionStateContext stateContext) {
+                                  TransactionStateContext stateContext, TransactionProductRepository transactionProductRepo) {
         this.repo = repo;
         this.strategyFactory = strategyFactory;
         this.publisher = publisher;
         this.stateContext = stateContext;
+        this.transactionProductRepo = transactionProductRepo;
     }
 
     @Override
@@ -85,12 +93,36 @@ public class TransactionServiceImpl implements TransactionService {
         TransactionCommand cmd = new DeleteTransactionCommand(repo, transactionId);
         cmd.execute();
     }
+
     @Transactional
     @Override
-    public Transaction addItems(UUID transactionId, List<String> items) {
-        Transaction txn = getTransaction(transactionId);
-        txn.getItems().addAll(items);
-        return repo.save(txn);
+    public TransactionProduct addItem(UUID transactionId, Long productId, int quantity) {
+        repo.findById(transactionId)
+                .orElseThrow(() -> new RuntimeException("Transaction not found"));
+
+        TransactionProduct item = TransactionProduct.builder()
+                .transactionId(transactionId)
+                .productId(productId)
+                .quantity(quantity)
+                .build();
+        return transactionProductRepo.save(item);
     }
+    @Override
+    public List<Transaction> filterByDate(UUID userID, Date start, Date end) {
+        List<Transaction> transactions = getUserTransactions(userID);
+        if (transactions.isEmpty())
+            throw new IllegalArgumentException("This User does not have any Transactions");
+
+        Instant startInstant = start.toInstant();
+        Instant endInstant = end.toInstant();
+
+        transactions.removeIf(transaction ->
+                transaction.getCreatedAt().isBefore(startInstant) ||
+                        transaction.getCreatedAt().isAfter(endInstant)
+        );
+
+        return transactions;
+    }
+
 
 }

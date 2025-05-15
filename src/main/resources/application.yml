@@ -7,3 +7,6 @@ spring:
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
+
+stripe:
+  secret-key: sk_test_51NxvqjAvhK4eX1cVAJ1fKeBNULiVD3yHf5U7sVA8XoiJcLhOOH8oKEITaIc41JFYiMCIvWs3rhf6JgwSS1avnAS200aUCwhLhU
