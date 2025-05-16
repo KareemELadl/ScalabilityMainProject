@@ -38,6 +38,7 @@ public class ReceiptService {
         ctx.setVariable("items", itemDescriptions);
 
         ctx.setVariable("total", txn.getTotalAmount());
+        ctx.setVariable("status", txn.getStatus());
 
         return templateEngine.process("receipt", ctx);
     }

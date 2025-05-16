@@ -1,6 +1,5 @@
 package com.example.Transaction.Controller;
 import com.example.Transaction.Model.Transaction;
-import com.example.Transaction.Model.TransactionProduct;
 import com.example.Transaction.Model.TransactionStatus;
 import com.example.Transaction.Service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,13 +22,6 @@ public class TransactionController {
         this.service = service;
     }
 
-    @PostMapping
-    public ResponseEntity<Transaction> create(@RequestBody Transaction txn,
-                                              @RequestParam String provider) {
-        Transaction created = service.createTransaction(txn, provider);
-        return ResponseEntity.ok(created);
-    }
-
 
     @GetMapping("/")
     public ResponseEntity<List<Transaction>> getAll() {
@@ -48,24 +40,17 @@ public class TransactionController {
 
     @PutMapping("/{id}/status")
     public ResponseEntity<Transaction> updateStatus(@PathVariable UUID id,
-                                                    @RequestParam TransactionStatus status) {
+                                                    @RequestParam TransactionStatus status) throws Exception {
         return ResponseEntity.ok(service.updateStatus(id, status));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) throws Exception {
+
         service.deleteTransaction(id);
         return ResponseEntity.noContent().build();
     }
-    @PostMapping("/{transactionId}/items")
-    public ResponseEntity<TransactionProduct> addItem(
-            @PathVariable UUID transactionId,
-            @RequestParam Long productId,
-            @RequestParam int quantity
-    ) {
-        TransactionProduct item = service.addItem(transactionId, productId, quantity);
-        return ResponseEntity.ok(item);
-    }
+
     @GetMapping("/filter")
     public ResponseEntity<?> filter(
             @RequestParam UUID userId,

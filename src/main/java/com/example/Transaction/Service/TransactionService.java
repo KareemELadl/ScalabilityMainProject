@@ -5,23 +5,24 @@ import com.example.Transaction.Model.TransactionProduct;
 import com.example.Transaction.Model.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 public interface TransactionService {
-    Transaction createTransaction(Transaction txn, String provider);
+
+    @Transactional
+    Transaction createTransaction(Transaction txn, String provider) throws Exception;
+
     Transaction getTransaction(UUID transactionId);
 
     List<Transaction> getAllTransactions();
 
     List<Transaction> getUserTransactions(UUID userId);
-    Transaction updateStatus(UUID transactionId, TransactionStatus status);
-    void deleteTransaction(UUID transactionId);
+    Transaction updateStatus(UUID transactionId, TransactionStatus status) throws Exception;
+    void deleteTransaction(UUID transactionId) throws Exception;
 
-    @Transactional
-    TransactionProduct addItem(UUID transactionId, Long productId, int quantity);
 
     List<Transaction> filterByDate(UUID userID, Date start, Date end);
+
 }

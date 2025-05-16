@@ -1,11 +1,10 @@
 package com.example.Transaction.Controller;
-
 import com.example.Transaction.Model.Product;
 import com.example.Transaction.Service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -19,7 +18,10 @@ public class ProductController {
         this.service = service;
     }
 
-    @PostMapping
+    @PostMapping(
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
     public Product createProduct(@RequestBody Product product) {
         return service.addProduct(product);
     }
@@ -33,5 +35,10 @@ public class ProductController {
     @DeleteMapping("/{id}")
     public void deleteProduct(@PathVariable UUID id) {
         service.deleteProduct(id);
+    }
+
+    @GetMapping("/all")
+    public List<Product> getAllProducts() {
+        return service.getAllProducts();
     }
 }

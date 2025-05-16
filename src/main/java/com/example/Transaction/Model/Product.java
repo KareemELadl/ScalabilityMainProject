@@ -1,23 +1,31 @@
 package com.example.Transaction.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UuidGenerator;
+
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "products")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Product {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
-    @Column(name = "merchant_id", nullable = false)
+    @Id @UuidGenerator
+    @Column(nullable = false, updatable = false, columnDefinition = "uuid")
+    private UUID id;
+
+    @Column(nullable = false)
     private Long merchantId;
 
     @Column(length = 150, nullable = false)
@@ -32,12 +40,13 @@ public class Product {
     @Column(nullable = false)
     private Integer stock;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(nullable = false)
     private Instant updatedAt;
 
-    @OneToMany(mappedBy = "product")
-    private List<TransactionProduct> transactions;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("prod-txps")
+    private List<TransactionProduct> transactions = new ArrayList<>();
 }

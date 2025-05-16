@@ -1,44 +1,45 @@
 package com.example.Transaction.Model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
+
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.UUID;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-@Entity
-@Table(name = "transactions")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Entity @Table(name = "transactions")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Transaction {
-    @Id
-    @UuidGenerator
+
+    @Id @UuidGenerator
     @Column(nullable = false, updatable = false, columnDefinition = "uuid")
     private UUID id;
 
-    @Column(name = "user_id", nullable = false, columnDefinition = "uuid")
+    @Column(nullable = false, columnDefinition = "uuid")
     private UUID userId;
 
-    @Column(name = "total_amount", nullable = false)
+    @Column(nullable = false)
     private BigDecimal totalAmount;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20)
     private TransactionStatus status;
 
-    @Column(name = "customer_email", nullable = false)
+    @Column(nullable = false)
     private String customerEmail;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(nullable = false)
     private Instant updatedAt;
 
-    @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TransactionProduct> items;
+    @OneToMany(mappedBy = "transaction",
+            cascade = CascadeType.PERSIST,
+            orphanRemoval = true)
+    @JsonManagedReference("txn-items")
+    private List<TransactionProduct> items = new ArrayList<>();
 }

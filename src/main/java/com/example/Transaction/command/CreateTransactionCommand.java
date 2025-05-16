@@ -1,70 +1,93 @@
 package com.example.Transaction.command;
 
 import com.example.Transaction.Model.Transaction;
+import com.example.Transaction.Model.TransactionProduct;
 import com.example.Transaction.Model.TransactionStatus;
+import com.example.Transaction.Repository.ProductRepository;
 import com.example.Transaction.Repository.TransactionRepository;
 import com.example.Transaction.event.TransactionCreatedEvent;
 import com.example.Transaction.event.TransactionFailedEvent;
 import com.example.Transaction.state.TransactionStateContext;
 import com.example.Transaction.strategy.PaymentStrategyFactory;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.UUID;
 
+@RequiredArgsConstructor
 public class CreateTransactionCommand implements TransactionCommand {
+
     private final Transaction txn;
     private final String provider;
-    private final TransactionRepository repo;
-    private final PaymentStrategyFactory factory;
-    private final TransactionStateContext stateContext;
+    private final TransactionRepository txnRepo;
+    private final ProductRepository productRepo;
+    private final PaymentStrategyFactory strategyFactory;
+    private final TransactionStateContext stateCtx;
     private final ApplicationEventPublisher publisher;
 
-    public CreateTransactionCommand(Transaction txn,
-                                    String provider,
-                                    TransactionRepository repo,
-                                    PaymentStrategyFactory factory,
-                                    TransactionStateContext stateContext,
-                                    ApplicationEventPublisher publisher) {
-        this.txn = txn;
-        this.provider = provider;
-        this.repo = repo;
-        this.factory = factory;
-        this.stateContext = stateContext;
-        this.publisher = publisher;
-    }
-
     @Override
-    public Transaction execute() {
-        // Initial PENDING transition
-        stateContext.transition(txn, TransactionStatus.PENDING);
-        txn.setCreatedAt(Instant.now());
-        txn.setUpdatedAt(Instant.now());
-        repo.save(txn);
+    @Transactional
+    public Transaction execute() throws Exception {
+        setInitialTransactionState();
+        assignProductsToItems();
+        calculateAndSetTotalAmount();
+        txnRepo.save(txn);
 
         try {
-            // Attempt to charge via chosen provider
-            factory.getStrategy(provider).charge(txn);
-
-            // On success -> COMPLETED
-            stateContext.transition(txn, TransactionStatus.COMPLETED);
-            txn.setUpdatedAt(Instant.now());
-            repo.save(txn);
-
-            // Publish creation event
+            processPayment();
+            completeTransaction();
             publisher.publishEvent(new TransactionCreatedEvent(txn));
             return txn;
-
         } catch (Exception ex) {
-            // On failure -> FAILED
-            stateContext.transition(txn, TransactionStatus.FAILED);
-            txn.setUpdatedAt(Instant.now());
-            repo.save(txn);
-
-            // Publish failed event
-            publisher.publishEvent(new TransactionFailedEvent(txn, ex));
-
-            // Re-throw so callers see the error
+            failTransaction(ex);
             throw ex;
         }
+    }
+
+    private void setInitialTransactionState() {
+        stateCtx.transition(txn, TransactionStatus.PENDING);
+        Instant now = Instant.now();
+        txn.setCreatedAt(now);
+        txn.setUpdatedAt(now);
+    }
+
+    private void assignProductsToItems() {
+        for (TransactionProduct item : txn.getItems()) {
+            item.setTransaction(txn);
+            UUID prodId = (item.getProduct() != null && item.getProduct().getId() != null)
+                    ? item.getProduct().getId()
+                    : item.getProductId();
+            if (prodId == null) {
+                throw new IllegalArgumentException("Each item needs productId");
+            }
+            item.setProduct(productRepo.getReferenceById(prodId));
+        }
+    }
+
+    private void calculateAndSetTotalAmount() {
+        BigDecimal grandTotal = txn.getItems().stream()
+                .map(i -> i.getProduct().getPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        txn.setTotalAmount(grandTotal);
+    }
+
+    private void processPayment() throws Exception {
+        strategyFactory.getStrategy(provider).charge(txn);
+    }
+
+    private void completeTransaction() {
+        stateCtx.transition(txn, TransactionStatus.COMPLETED);
+        txn.setUpdatedAt(Instant.now());
+        txnRepo.save(txn);
+    }
+
+    private void failTransaction(Exception ex) {
+        stateCtx.transition(txn, TransactionStatus.FAILED);
+        txn.setUpdatedAt(Instant.now());
+        txnRepo.save(txn);
+        publisher.publishEvent(new TransactionFailedEvent(txn, ex));
     }
 }

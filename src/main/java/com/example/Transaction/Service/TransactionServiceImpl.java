@@ -3,6 +3,7 @@ package com.example.Transaction.Service;
 import com.example.Transaction.Model.Transaction;
 import com.example.Transaction.Model.TransactionProduct;
 import com.example.Transaction.Model.TransactionStatus;
+import com.example.Transaction.Repository.ProductRepository;
 import com.example.Transaction.Repository.TransactionProductRepository;
 import com.example.Transaction.Repository.TransactionRepository;
 import com.example.Transaction.command.CreateTransactionCommand;
@@ -29,30 +30,37 @@ public class TransactionServiceImpl implements TransactionService {
     private final ApplicationEventPublisher publisher;
     private final TransactionStateContext stateContext;
     private final TransactionProductRepository transactionProductRepo;
+    private final ProductRepository productRepo;
+
 
 
     @Autowired
     public TransactionServiceImpl(TransactionRepository repo,
                                   PaymentStrategyFactory strategyFactory,
                                   ApplicationEventPublisher publisher,
-                                  TransactionStateContext stateContext, TransactionProductRepository transactionProductRepo) {
+                                  TransactionStateContext stateContext, TransactionProductRepository transactionProductRepo, ProductRepository productRepo) {
         this.repo = repo;
         this.strategyFactory = strategyFactory;
         this.publisher = publisher;
         this.stateContext = stateContext;
         this.transactionProductRepo = transactionProductRepo;
+        this.productRepo = productRepo;
     }
 
     @Override
     @Transactional
-    public Transaction createTransaction(Transaction txn, String provider) {
+    public Transaction createTransaction(Transaction txn, String provider) throws Exception {
+
         TransactionCommand cmd = new CreateTransactionCommand(
                 txn,
                 provider,
                 repo,
+                productRepo,
                 strategyFactory,
                 stateContext,
-                publisher);
+                publisher
+        );
+
         return cmd.execute();
     }
 
@@ -77,7 +85,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
-    public Transaction updateStatus(UUID transactionId, TransactionStatus status) {
+    public Transaction updateStatus(UUID transactionId, TransactionStatus status) throws Exception {
         TransactionCommand cmd = new UpdateTransactionStatusCommand(
                 repo,
                 stateContext,
@@ -89,24 +97,12 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
-    public void deleteTransaction(UUID transactionId) {
+    public void deleteTransaction(UUID transactionId) throws Exception {
         TransactionCommand cmd = new DeleteTransactionCommand(repo, transactionId);
         cmd.execute();
     }
 
-    @Transactional
-    @Override
-    public TransactionProduct addItem(UUID transactionId, Long productId, int quantity) {
-        repo.findById(transactionId)
-                .orElseThrow(() -> new RuntimeException("Transaction not found"));
 
-        TransactionProduct item = TransactionProduct.builder()
-                .transactionId(transactionId)
-                .productId(productId)
-                .quantity(quantity)
-                .build();
-        return transactionProductRepo.save(item);
-    }
     @Override
     public List<Transaction> filterByDate(UUID userID, Date start, Date end) {
         List<Transaction> transactions = getUserTransactions(userID);

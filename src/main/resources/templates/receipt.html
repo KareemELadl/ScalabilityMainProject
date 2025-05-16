@@ -2,138 +2,181 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Transaction Receipt</title>
+
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
     <style>
-        body {
-          background-color: #f4f7fa;
-          font-family: 'Roboto', sans-serif;
-          margin: 0;
-          padding: 0;
+        :root{
+          --primary:#2c3e50;
+          --light:#ecf0f1;
+          --muted:#7f8c8d;
+          --success:#27ae60;
+          --pending:#f39c12;
+          --failed:#e74c3c;
+          --bg-light:#f5f7f9;
+          --border:#e1e6ea;
         }
-        .receipt {
-          max-width: 600px;
-          background: #ffffff;
-          margin: 40px auto;
-          padding: 30px;
-          border-radius: 8px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+
+        /* reset & base */
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{
+          font-family:'Roboto',sans-serif;
+          background:var(--bg-light);
+          color:#34495e;
+          line-height:1.45;
+          padding:24px;
         }
-        .receipt h1 {
-          margin-top: 0;
-          font-size: 24px;
-          color: #2c3e50;
-          text-align: center;
+
+        /* container */
+        .receipt{
+          max-width:820px;
+          margin:auto;
+          background:#fff;
+          border-radius:10px;
+          overflow:hidden;
+          box-shadow:0 8px 30px rgba(0,0,0,.08);
         }
-        .receipt .meta {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 20px;
+
+        /* header */
+        .header{
+          background:linear-gradient(90deg,#243342 0%,#2c3e50 100%);
+          color:var(--light);
+          text-align:center;
+          padding:28px 16px;
         }
-        .receipt .meta div {
-          flex: 1;
+        .header h1{font-weight:500;font-size:1.9rem;letter-spacing:.5px}
+
+        /* meta grid */
+        .section{padding:32px 40px}
+        .meta{
+          display:grid;
+          grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+          gap:24px 12px;
+          margin-bottom:32px;
         }
-        .receipt .meta .label {
-          font-size: 14px;
-          color: #7f8c8d;
+        .label{font-size:.82rem;color:var(--muted);margin-bottom:4px}
+        .value{font-size:1.06rem;font-weight:500;word-wrap:break-word}
+
+.status {                     /* always present */
+  display:inline-block; padding:6px 14px; border-radius:18px;
+  font-size:.78rem; font-weight:500; color:#fff; text-transform:uppercase;
+}
+.status-completed { background:#27ae60; }
+.status-pending   { background:#f39c12; }
+.status-failed    { background:#e74c3c; }
+
+        /* table */
+        table{width:100%;border-collapse:collapse}
+        thead{background:var(--bg-light)}
+        th,td{padding:14px 10px;text-align:left;font-size:.95rem}
+        th{font-weight:500;color:var(--primary);border-bottom:2px solid var(--border)}
+        tbody tr:nth-child(even){background:#fafbfd}
+        tbody td{border-bottom:1px solid var(--border)}
+
+        /* summary */
+        .summary{
+          background:var(--bg-light);
+          display:flex;justify-content:flex-end;align-items:center;
+          padding:26px 40px;font-size:1.15rem;font-weight:700;
+          gap:18px;border-top:2px solid var(--border)
         }
-        .receipt .meta .value {
-          font-size: 16px;
-          color: #2c3e50;
-          font-weight: 500;
+
+        /* footer */
+        .footer{
+          text-align:center;padding:18px;
+          background:#fbfcfd;font-size:.85rem;color:var(--muted)
         }
-        .items {
-          margin-top: 20px;
-        }
-        .items h2 {
-          font-size: 18px;
-          color: #34495e;
-          border-bottom: 2px solid #ecf0f1;
-          padding-bottom: 8px;
-          margin-bottom: 12px;
-        }
-        .item-row {
-          display: flex;
-          justify-content: space-between;
-          padding: 10px 0;
-          border-bottom: 1px solid #ecf0f1;
-        }
-        .item-row:last-child {
-          border-bottom: none;
-        }
-        .item-name { font-size: 16px; color: #2c3e50; }
-        .item-price { font-size: 16px; color: #2c3e50; }
-        .total {
-          display: flex;
-          justify-content: space-between;
-          padding: 15px 0;
-          border-top: 2px solid #bdc3c7;
-          font-size: 18px;
-          font-weight: 700;
-          color: #2c3e50;
-        }
-        .footer {
-          text-align: center;
-          margin-top: 30px;
-          font-size: 14px;
-          color: #95a5a6;
-        }
-        .status {
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-weight: 500;
-          display: inline-block;
-        }
-        .status-completed { background-color: #27ae60; color: #ecf0f1; }
-        .status-pending { background-color: #f39c12; color: #ecf0f1; }
-        .status-failed { background-color: #e74c3c; color: #ecf0f1; }
+        .footer a{color:inherit;text-decoration:none;border-bottom:1px dashed currentColor}
+        .footer a:hover{opacity:.8}
     </style>
 </head>
 <body>
+
 <div class="receipt">
-    <h1>Transaction Receipt</h1>
-    <div class="meta">
-        <div>
-            <div class="label">Transaction ID</div>
-            <div class="value" th:text="${transaction.id}"></div>
-        </div>
-        <div>
-            <div class="label">Date</div>
-            <div class="value" th:text="${#dates.format(transaction.createdAt,'MMM dd, yyyy HH:mm')}"></div>
-        </div>
-    </div>
-    <div class="meta">
-        <div>
-            <div class="label">Email</div>
-            <div class="value" th:text="${transaction.customerEmail}"></div>
-        </div>
-        <div>
-            <div class="label">Status</div>
-            <div class="value">
-          <span class="status" th:classappend="${transaction.status == 'COMPLETED'}? ' status-completed' : (${transaction.status == 'PENDING'}? ' status-pending':' status-failed')"
-                th:text="${transaction.status}"></span>
+
+    <!-- header -->
+    <header class="header">
+        <h1>Transaction Receipt</h1>
+    </header>
+
+    <!-- meta -->
+    <section class="section">
+        <div class="meta">
+            <div>
+                <div class="label">Transaction&nbsp;ID</div>
+                <div class="value" th:text="${transaction.id}">—</div>
+            </div>
+            <div>
+                <div class="label">Date</div>
+                <div class="value"
+                     th:text="${#dates.format(transaction.createdAt,'MMM dd, yyyy HH:mm')}">
+                    —
+                </div>
+            </div>
+            <div>
+                <div class="label">Customer&nbsp;Email</div>
+                <div class="value" th:text="${transaction.customerEmail}">—</div>
+            </div>
+            <div class="block">
+                <div class="label">Status</div>
+                <div class="value">
+                    <span class="status"
+                          th:classappend="${
+          transaction.status.name() == 'COMPLETED' ? ' status-completed' :
+          (transaction.status.name() == 'PENDING'  ? ' status-pending'  :
+                                                     ' status-failed')
+      }"
+                          th:text="${transaction.status}">
+  PENDING
+</span>
+
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="items">
-        <h2>Purchased Items</h2>
-        <div th:each="item : ${items}" class="item-row">
-            <div class="item-name" th:text="${item.split(' \(')[0]}">Item Name</div>
-            <div class="item-price" th:text="${item.split(' \(')[1].replace(')','')}">$0.00</div>
+
+        <!-- items table -->
+        <h2 style="font-size:1.25rem;margin:6px 0 14px;color:var(--primary);font-weight:500">
+            Purchased Items
+        </h2>
+        <div style="overflow-x:auto">
+            <table>
+                <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Unit&nbsp;Price</th>
+                    <th>Line&nbsp;Total</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${transaction.items}">
+                    <td th:text="${item.product.name}">—</td>
+                    <td th:text="${item.quantity}">—</td>
+                    <td th:text="${'$' + #numbers.formatDecimal(item.product.price,2,2)}">$0.00</td>
+                    <td th:text="${'$' + #numbers.formatDecimal(item.product.price * item.quantity,2,2)}">$0.00</td>
+                </tr>
+                </tbody>
+            </table>
         </div>
+    </section>
+
+    <!-- grand total -->
+    <div class="summary">
+        <span>Grand&nbsp;Total:</span>
+        <span th:text="${'$' + #numbers.formatDecimal(transaction.totalAmount,2,2)}">$0.00</span>
     </div>
 
-    <div class="total">
-        <div>Total</div>
-        <div th:text="'\$' + ${total}">$0.00</div>
-    </div>
+    <!-- footer -->
+    <footer class="footer">
+        Thank you for your purchase! &middot;
+        Need help? <a href="mailto:eslam4gamal111@gmail.com">eslam4gamal111@gmail.com</a>
+    </footer>
 
-    <div class="footer">
-        Thank you for your purchase!<br>
-        Contact support if you have any questions.
-    </div>
 </div>
+
 </body>
 </html>

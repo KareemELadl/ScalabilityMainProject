@@ -4,5 +4,5 @@ import com.example.Transaction.Model.Transaction;
 
 public interface TransactionCommand {
 
-    Transaction execute();
+    Transaction execute() throws Exception;
 }
