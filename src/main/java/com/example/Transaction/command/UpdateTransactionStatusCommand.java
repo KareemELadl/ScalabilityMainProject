@@ -11,12 +11,12 @@ import java.util.UUID;
 public class UpdateTransactionStatusCommand implements TransactionCommand {
     private final TransactionRepository repo;
     private final TransactionStateContext stateContext;
-    private final UUID transactionId;
+    private final Long transactionId;
     private final TransactionStatus newStatus;
 
     public UpdateTransactionStatusCommand(TransactionRepository repo,
                                           TransactionStateContext stateContext,
-                                          UUID transactionId,
+                                          Long transactionId,
                                           TransactionStatus newStatus) {
         this.repo = repo;
         this.stateContext = stateContext;

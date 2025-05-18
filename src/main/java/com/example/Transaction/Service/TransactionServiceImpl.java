@@ -27,7 +27,6 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository repo;
     private final PaymentStrategyFactory strategyFactory;
-    private final ApplicationEventPublisher publisher;
     private final TransactionStateContext stateContext;
     private final TransactionProductRepository transactionProductRepo;
     private final ProductRepository productRepo;
@@ -37,11 +36,9 @@ public class TransactionServiceImpl implements TransactionService {
     @Autowired
     public TransactionServiceImpl(TransactionRepository repo,
                                   PaymentStrategyFactory strategyFactory,
-                                  ApplicationEventPublisher publisher,
                                   TransactionStateContext stateContext, TransactionProductRepository transactionProductRepo, ProductRepository productRepo) {
         this.repo = repo;
         this.strategyFactory = strategyFactory;
-        this.publisher = publisher;
         this.stateContext = stateContext;
         this.transactionProductRepo = transactionProductRepo;
         this.productRepo = productRepo;
@@ -57,8 +54,7 @@ public class TransactionServiceImpl implements TransactionService {
                 repo,
                 productRepo,
                 strategyFactory,
-                stateContext,
-                publisher
+                stateContext
         );
 
         return cmd.execute();
@@ -66,7 +62,7 @@ public class TransactionServiceImpl implements TransactionService {
 
 
     @Override
-    public Transaction getTransaction(UUID transactionId) {
+    public Transaction getTransaction(Long transactionId) {
         return repo.findById(transactionId)
                 .orElseThrow(() -> new RuntimeException("Transaction not found"));
     }
@@ -78,14 +74,14 @@ public class TransactionServiceImpl implements TransactionService {
 
 
     @Override
-    public List<Transaction> getUserTransactions(UUID userId) {
+    public List<Transaction> getUserTransactions(Long userId) {
         return repo.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
 
     @Override
     @Transactional
-    public Transaction updateStatus(UUID transactionId, TransactionStatus status) throws Exception {
+    public Transaction updateStatus(Long transactionId, TransactionStatus status) throws Exception {
         TransactionCommand cmd = new UpdateTransactionStatusCommand(
                 repo,
                 stateContext,
@@ -97,14 +93,14 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
-    public void deleteTransaction(UUID transactionId) throws Exception {
+    public void deleteTransaction(Long transactionId) throws Exception {
         TransactionCommand cmd = new DeleteTransactionCommand(repo, transactionId);
         cmd.execute();
     }
 
 
     @Override
-    public List<Transaction> filterByDate(UUID userID, Date start, Date end) {
+    public List<Transaction> filterByDate(Long userID, Date start, Date end) {
         List<Transaction> transactions = getUserTransactions(userID);
         if (transactions.isEmpty())
             throw new IllegalArgumentException("This User does not have any Transactions");

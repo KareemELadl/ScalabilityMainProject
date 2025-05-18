@@ -27,13 +27,13 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public Product getProduct(@PathVariable UUID id)
+    public Product getProduct(@PathVariable Long id)
     {
         return service.getProduct(id);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteProduct(@PathVariable UUID id) {
+    public void deleteProduct(@PathVariable Long id) {
         service.deleteProduct(id);
     }
 

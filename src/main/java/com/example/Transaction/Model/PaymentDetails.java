@@ -2,7 +2,6 @@
 
     import jakarta.persistence.*;
     import lombok.*;
-    import org.hibernate.annotations.Type;
 
     import java.time.Instant;
     import java.util.UUID;
@@ -17,8 +16,8 @@
     @Setter
     public class PaymentDetails {
         @Id
-        @Column(name = "transaction_id", columnDefinition = "uuid")
-        private UUID transactionId;
+        @Column(name = "transaction_id")
+        private Long transactionId;
 
         @Column(nullable = false)
         private String provider;

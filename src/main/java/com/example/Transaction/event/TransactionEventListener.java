@@ -11,10 +11,13 @@ public class TransactionEventListener {
 
     private final EmailService emailService;
     private final ReceiptService receiptService;
+    private final StockEventPublisher stockPublisher;
 
-    public TransactionEventListener(EmailService emailService, ReceiptService receiptService) {
+
+    public TransactionEventListener(EmailService emailService, ReceiptService receiptService, StockEventPublisher stockPublisher) {
         this.emailService = emailService;
         this.receiptService = receiptService;
+        this.stockPublisher = stockPublisher;
     }
 
     @EventListener
@@ -30,6 +33,8 @@ public class TransactionEventListener {
                 "Your Transaction Receipt",
                 html
         );
+        stockPublisher.publish(txn.getItems());
+
     }
     @EventListener
     public void handleTransactionRefunded(TransactionFailedEvent event) {

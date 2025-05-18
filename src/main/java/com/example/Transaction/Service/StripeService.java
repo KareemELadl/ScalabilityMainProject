@@ -61,8 +61,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
 @Service
 @RequiredArgsConstructor
 public class StripeService {
@@ -71,7 +69,7 @@ public class StripeService {
     private String secretKey;
 
     public StripeResponse createCheckoutSession(productRequest req,
-                                                UUID txnId) {
+                                                Long txnId) {
 
         Stripe.apiKey = secretKey;                    // initialise once per JVM
 

@@ -1,52 +1,155 @@
 package com.example.Transaction.Model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.UuidGenerator;
+import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "products")
-@Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Product {
 
-    @Id @UuidGenerator
-    @Column(nullable = false, updatable = false, columnDefinition = "uuid")
-    private UUID id;
+    /* ─────────── core columns ─────────── */
+    @Setter
+    @Id
+    private Long id;
 
-    @Column(nullable = false)
+    @Setter
     private Long merchantId;
 
+    @Setter
     @Column(length = 150, nullable = false)
     private String name;
 
+    @Setter
     @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(precision = 10, scale = 2, nullable = false)
     private BigDecimal price;
 
+    @Setter
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Integer stock;
-
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt;
+    private ProductCategory category;
 
     @Column(nullable = false)
-    private Instant updatedAt;
+    private Integer stock = 0;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference("prod-txps")
-    private List<TransactionProduct> transactions = new ArrayList<>();
+    @Column(nullable = false)
+    private Integer discount = 0;              // %
+
+    @Column(name = "price_after_discount",
+            precision = 10, scale = 2,
+            nullable = false)
+    private BigDecimal priceAfterDiscount;
+
+    @Setter
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    private BigDecimal calcPad() {
+        if (price == null) return BigDecimal.ZERO.setScale(2);
+        int pct = (discount == null) ? 0 : discount;
+        if (pct == 0) return price.setScale(2, RoundingMode.HALF_UP);
+
+        return price
+                .multiply(BigDecimal.valueOf(100 - pct))
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+        this.priceAfterDiscount = calcPad();
+    }
+    public void setDiscount(Integer discount) {
+        this.discount = (discount == null) ? 0 : discount;
+        this.priceAfterDiscount = calcPad();
+    }
+    public void setStock(Integer stock) {
+        this.stock = (stock == null) ? 0 : stock;
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void syncBeforeSave() {
+        this.priceAfterDiscount = calcPad();           // final safeguard
+        LocalDateTime now = LocalDateTime.now();
+        if (createdAt == null) createdAt = now;
+        this.updatedAt = now;
+    }
+
+    public Product() {}
+
+    public Product(Long merchantId, String name, String description,
+                   BigDecimal price, Integer stock, Integer discount,
+                   ProductCategory category) {
+        this.merchantId = merchantId;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.stock = (stock == null) ? 0 : stock;
+        this.discount = (discount == null) ? 0 : discount;
+        this.category = category;
+        this.priceAfterDiscount = calcPad();
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+
+    /* getters … (keep what you already have) */
+
+    public ProductCategory getCategory() {
+        return category;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public Integer getDiscount() {
+        return discount;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Long getMerchantId() {
+        return merchantId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public BigDecimal getPriceAfterDiscount() {
+        return priceAfterDiscount;
+    }
+
+//    public void setPriceAfterDiscount(BigDecimal priceAfterDiscount) {
+//        this.priceAfterDiscount = priceAfterDiscount;
+//    }
+
+    public Integer getStock() {
+        return stock;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
 }

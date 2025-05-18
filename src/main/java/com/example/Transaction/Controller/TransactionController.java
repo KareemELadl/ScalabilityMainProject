@@ -1,75 +1,97 @@
 package com.example.Transaction.Controller;
+
 import com.example.Transaction.Model.Transaction;
 import com.example.Transaction.Model.TransactionStatus;
 import com.example.Transaction.Service.TransactionService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.Date;
-import org.springframework.format.annotation.DateTimeFormat;
 
 @RestController
 @RequestMapping("/transactions")
 public class TransactionController {
 
-    private final TransactionService service;
+    private static final String TEST_USER_HEADER = "X-User-Id";
 
+    private final TransactionService service;
 
     @Autowired
     public TransactionController(TransactionService service) {
         this.service = service;
     }
 
-
     @GetMapping("/")
-    public ResponseEntity<List<Transaction>> getAll() {
+    public ResponseEntity<List<Transaction>> getAll(HttpServletRequest request) {
+        checkLogin(request);
         return ResponseEntity.ok(service.getAllTransactions());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Transaction> getById(@PathVariable UUID id) {
+    public ResponseEntity<Transaction> getById(HttpServletRequest request,
+                                               @PathVariable Long id) {
+        checkLogin(request);
         return ResponseEntity.ok(service.getTransaction(id));
     }
 
     @GetMapping
-    public ResponseEntity<List<Transaction>> getByUser(@RequestParam UUID userId) {
+    public ResponseEntity<List<Transaction>> getByUser(HttpServletRequest request,
+                                                       @RequestParam Long userId) {
+        checkLogin(request);
         return ResponseEntity.ok(service.getUserTransactions(userId));
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<Transaction> updateStatus(@PathVariable UUID id,
+    public ResponseEntity<Transaction> updateStatus(HttpServletRequest request,
+                                                    @PathVariable Long id,
                                                     @RequestParam TransactionStatus status) throws Exception {
+        checkLogin(request);
         return ResponseEntity.ok(service.updateStatus(id, status));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) throws Exception {
-
+    public ResponseEntity<Void> delete(HttpServletRequest request,
+                                       @PathVariable Long id) throws Exception {
+        checkLogin(request);
         service.deleteTransaction(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/filter")
-    public ResponseEntity<?> filter(
-            @RequestParam UUID userId,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
-            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate)
-    {
-        if(startDate.after(endDate))
-        {
+    public ResponseEntity<?> filter(HttpServletRequest request,
+                                    @RequestParam Long userId,
+                                    @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
+                                    @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
+        checkLogin(request);
+        if (startDate.after(endDate)) {
             return ResponseEntity.badRequest().body("Start date must be before end date");
         }
-        try
-        {
-            List<Transaction> transactions = service.filterByDate(userId, startDate, endDate);
-            return ResponseEntity.ok(transactions);
-        }
-        catch (Exception e)
-        {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        List<Transaction> txns = service.filterByDate(userId, startDate, endDate);
+        return ResponseEntity.ok(txns);
     }
 
+    private void checkLogin(HttpServletRequest request) {
+        String testUser = request.getHeader(TEST_USER_HEADER);
+        if (testUser != null && !testUser.isEmpty()) {
+            return;
+        }
+        String auth = request.getHeader("Authorization");
+        if (auth == null || !auth.startsWith("Bearer ")) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "Missing or invalid Authorization header");
+        }
+      //  String token = auth.substring(7);
+//        try {
+//        //    userVerification.verifyLogin(token);
+//        } catch (Exception ex) {
+//            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
+//        }
+    }
 }

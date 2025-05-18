@@ -14,15 +14,15 @@ public interface TransactionService {
     @Transactional
     Transaction createTransaction(Transaction txn, String provider) throws Exception;
 
-    Transaction getTransaction(UUID transactionId);
+    Transaction getTransaction(Long transactionId);
 
     List<Transaction> getAllTransactions();
 
-    List<Transaction> getUserTransactions(UUID userId);
-    Transaction updateStatus(UUID transactionId, TransactionStatus status) throws Exception;
-    void deleteTransaction(UUID transactionId) throws Exception;
+    List<Transaction> getUserTransactions(Long userId);
+    Transaction updateStatus(Long transactionId, TransactionStatus status) throws Exception;
+    void deleteTransaction(Long transactionId) throws Exception;
 
 
-    List<Transaction> filterByDate(UUID userID, Date start, Date end);
+    List<Transaction> filterByDate(Long userID, Date start, Date end);
 
 }

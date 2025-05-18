@@ -15,12 +15,13 @@ import java.util.UUID;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Transaction {
 
-    @Id @UuidGenerator
-    @Column(nullable = false, updatable = false, columnDefinition = "uuid")
-    private UUID id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(nullable = false, updatable = false)
+    private Long id;
 
-    @Column(nullable = false, columnDefinition = "uuid")
-    private UUID userId;
+    @Column(nullable = false)
+    private Long  userId;
 
     @Column(nullable = false)
     private BigDecimal totalAmount;

@@ -1,3 +1,4 @@
+// com/example/Transaction/state/TransactionStateContext.java
 package com.example.Transaction.state;
 
 import com.example.Transaction.Model.Transaction;
@@ -16,20 +17,13 @@ public class TransactionStateContext {
         this.stateMap = states;
     }
 
-
     public void transition(Transaction txn, TransactionStatus newStatus) {
-        TransactionStatus oldStatus = txn.getStatus();
-        if (oldStatus != null) {
-            TransactionState oldState = stateMap.get(oldStatus.name());
-            if (oldState != null) {
-                oldState.onExit(txn);
-            }
+        if (txn.getStatus() != null) {
+            TransactionState oldS = stateMap.get(txn.getStatus().name());
+            if (oldS != null) oldS.onExit(txn);
         }
-
         txn.setStatus(newStatus);
-        TransactionState newState = stateMap.get(newStatus.name());
-        if (newState != null) {
-            newState.onEnter(txn);
-        }
+        TransactionState newS = stateMap.get(newStatus.name());
+        if (newS != null) newS.onEnter(txn);
     }
 }

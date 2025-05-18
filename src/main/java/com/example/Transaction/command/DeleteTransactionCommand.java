@@ -8,9 +8,9 @@ import java.util.UUID;
 
 public class DeleteTransactionCommand implements TransactionCommand {
     private final TransactionRepository repo;
-    private final UUID transactionId;
+    private final Long transactionId;
 
-    public DeleteTransactionCommand(TransactionRepository repo, UUID transactionId) {
+    public DeleteTransactionCommand(TransactionRepository repo, Long transactionId) {
         this.repo = repo;
         this.transactionId = transactionId;
     }

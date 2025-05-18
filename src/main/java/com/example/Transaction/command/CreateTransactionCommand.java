@@ -3,19 +3,15 @@ package com.example.Transaction.command;
 import com.example.Transaction.Model.Transaction;
 import com.example.Transaction.Model.TransactionProduct;
 import com.example.Transaction.Model.TransactionStatus;
+import com.example.Transaction.Model.Product;
 import com.example.Transaction.Repository.ProductRepository;
 import com.example.Transaction.Repository.TransactionRepository;
-import com.example.Transaction.event.TransactionCreatedEvent;
-import com.example.Transaction.event.TransactionFailedEvent;
 import com.example.Transaction.state.TransactionStateContext;
 import com.example.Transaction.strategy.PaymentStrategyFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.UUID;
 
 @RequiredArgsConstructor
 public class CreateTransactionCommand implements TransactionCommand {
@@ -26,20 +22,18 @@ public class CreateTransactionCommand implements TransactionCommand {
     private final ProductRepository productRepo;
     private final PaymentStrategyFactory strategyFactory;
     private final TransactionStateContext stateCtx;
-    private final ApplicationEventPublisher publisher;
 
     @Override
     @Transactional
     public Transaction execute() throws Exception {
-        setInitialTransactionState();
-        assignProductsToItems();
+        stateCtx.transition(txn, TransactionStatus.PENDING);
+        assignProductsAndValidateStock();
         calculateAndSetTotalAmount();
         txnRepo.save(txn);
 
         try {
             processPayment();
             completeTransaction();
-            publisher.publishEvent(new TransactionCreatedEvent(txn));
             return txn;
         } catch (Exception ex) {
             failTransaction(ex);
@@ -47,31 +41,39 @@ public class CreateTransactionCommand implements TransactionCommand {
         }
     }
 
-    private void setInitialTransactionState() {
-        stateCtx.transition(txn, TransactionStatus.PENDING);
-        Instant now = Instant.now();
-        txn.setCreatedAt(now);
-        txn.setUpdatedAt(now);
-    }
 
-    private void assignProductsToItems() {
+    private void assignProductsAndValidateStock() {
         for (TransactionProduct item : txn.getItems()) {
             item.setTransaction(txn);
-            UUID prodId = (item.getProduct() != null && item.getProduct().getId() != null)
+            Long prodId = (item.getProduct() != null && item.getProduct().getId() != null)
                     ? item.getProduct().getId()
                     : item.getProductId();
             if (prodId == null) {
-                throw new IllegalArgumentException("Each item needs productId");
+                throw new IllegalArgumentException("Each item needs a productId");
             }
-            item.setProduct(productRepo.getReferenceById(prodId));
+
+            Product product = productRepo.findById(prodId).orElseThrow(() ->
+                    new IllegalArgumentException("Product not found: " + prodId));
+
+            int available = product.getStock();
+            int requested  = item.getQuantity();
+            if (requested > available) {
+                throw new IllegalStateException("Insufficient stock for product " + prodId +
+                        ": requested " + requested + ", available " + available);
+            }
+
+            product.setStock(available - requested);
+            productRepo.save(product);
+
+            item.setProduct(product);
         }
     }
 
     private void calculateAndSetTotalAmount() {
-        BigDecimal grandTotal = txn.getItems().stream()
+        BigDecimal total = txn.getItems().stream()
                 .map(i -> i.getProduct().getPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        txn.setTotalAmount(grandTotal);
+        txn.setTotalAmount(total);
     }
 
     private void processPayment() throws Exception {
@@ -88,6 +90,5 @@ public class CreateTransactionCommand implements TransactionCommand {
         stateCtx.transition(txn, TransactionStatus.FAILED);
         txn.setUpdatedAt(Instant.now());
         txnRepo.save(txn);
-        publisher.publishEvent(new TransactionFailedEvent(txn, ex));
     }
 }
