@@ -2,6 +2,7 @@ package com.example.Transaction.Controller;
 
 import com.example.Transaction.Model.Transaction;
 import com.example.Transaction.Model.TransactionStatus;
+import com.example.Transaction.Service.TokenClient;
 import com.example.Transaction.Service.TransactionService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,9 @@ public class TransactionController {
     private static final String TEST_USER_HEADER = "X-User-Id";
 
     private final TransactionService service;
+
+    @Autowired
+    private TokenClient tokenClient;
 
     @Autowired
     public TransactionController(TransactionService service) {
@@ -78,15 +82,17 @@ public class TransactionController {
     }
 
     private void checkLogin(HttpServletRequest request) {
-        String testUser = request.getHeader(TEST_USER_HEADER);
-        if (testUser != null && !testUser.isEmpty()) {
-            return;
-        }
+//        String testUser = request.getHeader(TEST_USER_HEADER);
+//        if (testUser != null && !testUser.isEmpty()) {
+//            return;
+//        }
         String auth = request.getHeader("Authorization");
-        if (auth == null || !auth.startsWith("Bearer ")) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
-                    "Missing or invalid Authorization header");
+        boolean valid = tokenClient.isTokenValid(auth);
+
+        if (!valid) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
         }
+
       //  String token = auth.substring(7);
 //        try {
 //        //    userVerification.verifyLogin(token);

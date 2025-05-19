@@ -66,9 +66,9 @@ public class CreateTransactionCommand implements TransactionCommand {
             productRepo.save(product);
 
             item.setProduct(product);
+            item.setProductId(product.getId());
         }
     }
-
     private void calculateAndSetTotalAmount() {
         BigDecimal total = txn.getItems().stream()
                 .map(i -> i.getProduct().getPrice().multiply(BigDecimal.valueOf(i.getQuantity())))

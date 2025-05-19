@@ -1,4 +1,3 @@
-// com/example/Transaction/state/FailedState.java
 package com.example.Transaction.state;
 
 import com.example.Transaction.Model.Transaction;

@@ -1,26 +1,20 @@
 package com.example.Transaction.Service;
 
 import com.example.Transaction.Model.Transaction;
-import com.example.Transaction.Model.TransactionProduct;
 import com.example.Transaction.Model.TransactionStatus;
 import com.example.Transaction.Repository.ProductRepository;
 import com.example.Transaction.Repository.TransactionProductRepository;
 import com.example.Transaction.Repository.TransactionRepository;
-import com.example.Transaction.command.CreateTransactionCommand;
-import com.example.Transaction.command.DeleteTransactionCommand;
-import com.example.Transaction.command.TransactionCommand;
-import com.example.Transaction.command.UpdateTransactionStatusCommand;
+import com.example.Transaction.command.*;
 import com.example.Transaction.state.TransactionStateContext;
 import com.example.Transaction.strategy.PaymentStrategyFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class TransactionServiceImpl implements TransactionService {
@@ -30,6 +24,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionStateContext stateContext;
     private final TransactionProductRepository transactionProductRepo;
     private final ProductRepository productRepo;
+
 
 
 
@@ -48,7 +43,8 @@ public class TransactionServiceImpl implements TransactionService {
     @Transactional
     public Transaction createTransaction(Transaction txn, String provider) throws Exception {
 
-        TransactionCommand cmd = new CreateTransactionCommand(
+        TransactionCommand cmd = CommandFactory.build(
+                "create",
                 txn,
                 provider,
                 repo,
@@ -82,7 +78,8 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     @Transactional
     public Transaction updateStatus(Long transactionId, TransactionStatus status) throws Exception {
-        TransactionCommand cmd = new UpdateTransactionStatusCommand(
+        TransactionCommand cmd = CommandFactory.build(
+                "create",
                 repo,
                 stateContext,
                 transactionId,
@@ -94,7 +91,8 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     @Transactional
     public void deleteTransaction(Long transactionId) throws Exception {
-        TransactionCommand cmd = new DeleteTransactionCommand(repo, transactionId);
+        TransactionCommand cmd = CommandFactory.build(
+                "delete",repo, transactionId);
         cmd.execute();
     }
 

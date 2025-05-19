@@ -3,13 +3,11 @@ package com.example.Transaction.Model;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Entity @Table(name = "transactions")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -23,7 +21,7 @@ public class Transaction {
     @Column(nullable = false)
     private Long  userId;
 
-    @Column(nullable = false)
+    @Column
     private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20)
@@ -37,6 +35,10 @@ public class Transaction {
 
     @Column(nullable = false)
     private Instant updatedAt;
+
+
+    @Column(nullable = false)
+    private String address;
 
     @OneToMany(mappedBy = "transaction",
             cascade = CascadeType.PERSIST,

@@ -16,6 +16,5 @@ public class CompletedState implements TransactionState {
     public void onEnter(Transaction txn) {
 
         publisher.publishEvent(new TransactionCreatedEvent(txn));
-        System.out.println("Txn " + txn.getId() + " → COMPLETED (event published)");
     }
 }
