@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: search-service
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: search-service
@@ -14,11 +14,17 @@ spec:
     spec:
       containers:
         - name: search-service
-          image: adhamalyy/search-service:1.0
+          image: kareemeladl/search-service:1.0
           ports:
             - containerPort: 8082
           env:
-            - name: SPRING_DATA_REDIS_HOST
+            - name: SERVER_PORT
+              value: "8082"
+            - name: REDIS_HOST
               value: redis
-            - name: SPRING_DATA_REDIS_PORT
-              value: "6379"
+            - name: RABBITMQ_HOST
+              value: rabbitmq
+            - name: MERCHANT_SERVICE_URL
+              value: http://merchant-service:8080
+            - name: USER_SERVICE_URL
+              value: http://user-service:8080

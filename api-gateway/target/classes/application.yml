@@ -4,95 +4,22 @@ server:
 spring:
   application:
     name: api-gateway
-
   cloud:
     gateway:
       routes:
-
-        # 🧑‍💻 USER SERVICE (PORT 8081)
-        - id: user-auth
-          uri: http://user-service:8081
+        - id: user-service
+          uri: http://localhost:8081
           predicates:
-            - Path=/user/auth/**
-          filters:
-            - StripPrefix=1
-
-        - id: user-users
-          uri: http://user-service:8081
-          predicates:
-            - Path=/user/users/**
-          filters:
-            - StripPrefix=1
-
-        - id: user-search-products
-          uri: http://user-service:8081
-          predicates:
-            - Path=/user/users/search-products
-          filters:
-            - StripPrefix=1
-
-        # 🔍 SEARCH SERVICE (PORT 8082)
-        - id: search
-          uri: http://search-service:8082
+            - Path=/user/**
+        - id: search-service
+          uri: http://localhost:8082
           predicates:
             - Path=/search/**
-          filters:
-            - StripPrefix=1
-
-        # 💳 TRANSACTION SERVICE (PORT 8083)
-        - id: checkout
-          uri: http://transaction-service:8083
+        - id: transaction-service
+          uri: http://localhost:8083
           predicates:
-            - Path=/transaction/checkout/**
-          filters:
-            - StripPrefix=1
-
-        - id: transactions
-          uri: http://transaction-service:8083
+            - Path=/transaction/**
+        - id: merchant-service
+          uri: http://localhost:8084
           predicates:
-            - Path=/transaction/transactions/**
-          filters:
-            - StripPrefix=1
-
-        - id: product-transaction
-          uri: http://transaction-service:8083
-          predicates:
-            - Path=/transaction/product/**
-          filters:
-            - StripPrefix=1
-
-        # 🏪 MERCHANT SERVICE (PORT 8084)
-        - id: merchant-auth
-          uri: http://merchant-service:8084
-          predicates:
-            - Path=/merchant/auth/**
-          filters:
-            - StripPrefix=1
-
-        - id: merchant-merchants
-          uri: http://merchant-service:8084
-          predicates:
-            - Path=/merchant/merchants/**
-          filters:
-            - StripPrefix=1
-
-        - id: merchant-products
-          uri: http://merchant-service:8084
-          predicates:
-            - Path=/merchant/products/**
-          filters:
-            - StripPrefix=1
-
-        - id: merchant-order-items
-          uri: http://merchant-service:8084
-          predicates:
-            - Path=/merchant/order-items/**
-          filters:
-            - StripPrefix=1
-
-        - id: merchant-test
-          uri: http://merchant-service:8084
-          predicates:
-            - Path=/merchant/test
-          filters:
-            - StripPrefix=1
+            - Path=/merchant/**

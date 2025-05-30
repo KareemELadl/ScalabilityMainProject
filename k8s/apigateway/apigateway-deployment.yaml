@@ -6,26 +6,122 @@ spec:
   replicas: 2
   selector:
     matchLabels:
-      app: api-gateway-service
+      app: api-gateway
   template:
     metadata:
       labels:
-        app: api-gateway-service
+        app: api-gateway
     spec:
       containers:
-        - name: api-gateway-service
-          image: adhamalyy/api-gateway:1.0
+        - name: api-gateway
+          image: kareemeladl/api-gateway:1.0
           ports:
             - containerPort: 8080
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: api-gateway
-spec:
-  type: LoadBalancer
-  ports:
-    - port: 80
-      targetPort: 8080
-  selector:
-    app: api-gateway-service
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: k8s
+            - name: SPRING_MAIN_WEB_APPLICATION_TYPE
+              value: reactive
+
+            # 🧑‍💻 USER SERVICE
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_0_ID
+              value: user-auth
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_0_URI
+              value: http://user-service:8080
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_0_PREDICATES_0
+              value: Path=/user/auth/**
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_0_FILTERS_0
+              value: StripPrefix=1
+
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_1_ID
+              value: user-users
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_1_URI
+              value: http://user-service:8080
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_1_PREDICATES_0
+              value: Path=/user/users/**
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_1_FILTERS_0
+              value: StripPrefix=1
+
+            # 🔍 SEARCH SERVICE
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_2_ID
+              value: search
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_2_URI
+              value: http://search-service:8080
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_2_PREDICATES_0
+              value: Path=/search/**
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_2_FILTERS_0
+              value: StripPrefix=1
+
+            # 💳 TRANSACTION SERVICE
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_3_ID
+              value: transaction-checkout
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_3_URI
+              value: http://transaction-service:8080
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_3_PREDICATES_0
+              value: Path=/transaction/checkout/**
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_3_FILTERS_0
+              value: StripPrefix=1
+
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_4_ID
+              value: transaction-transactions
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_4_URI
+              value: http://transaction-service:8080
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_4_PREDICATES_0
+              value: Path=/transaction/transactions/**
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_4_FILTERS_0
+              value: StripPrefix=1
+
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_5_ID
+              value: transaction-product
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_5_URI
+              value: http://transaction-service:8080
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_5_PREDICATES_0
+              value: Path=/transaction/product/**
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_5_FILTERS_0
+              value: StripPrefix=1
+
+            # 🏪 MERCHANT SERVICE
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_6_ID
+              value: merchant-auth
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_6_URI
+              value: http://merchant-service:8080
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_6_PREDICATES_0
+              value: Path=/merchant/auth/**
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_6_FILTERS_0
+              value: StripPrefix=1
+
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_7_ID
+              value: merchant-merchants
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_7_URI
+              value: http://merchant-service:8080
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_7_PREDICATES_0
+              value: Path=/merchant/merchants/**
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_7_FILTERS_0
+              value: StripPrefix=1
+
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_8_ID
+              value: merchant-products
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_8_URI
+              value: http://merchant-service:8080
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_8_PREDICATES_0
+              value: Path=/merchant/products/**
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_8_FILTERS_0
+              value: StripPrefix=1
+
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_9_ID
+              value: merchant-order-items
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_9_URI
+              value: http://merchant-service:8080
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_9_PREDICATES_0
+              value: Path=/merchant/order-items/**
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_9_FILTERS_0
+              value: StripPrefix=1
+
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_10_ID
+              value: merchant-test
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_10_URI
+              value: http://merchant-service:8080
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_10_PREDICATES_0
+              value: Path=/merchant/test
+            - name: SPRING_CLOUD_GATEWAY_ROUTES_10_FILTERS_0
+              value: StripPrefix=1

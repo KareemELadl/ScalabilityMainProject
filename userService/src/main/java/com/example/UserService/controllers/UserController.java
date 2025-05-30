@@ -33,6 +33,20 @@ public class UserController {
     }
     // get all users
 
+@GetMapping("/deleteUserMail")
+public ResponseEntity<String> deleteUser(@RequestParam String email) {
+    try {
+        System.out.println("Deleting user with email: " + email);
+        userService.deleteUser(email);
+        return ResponseEntity.ok("User deleted successfully");
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error deleting user: " + e.getMessage());
+    }
+}
+
+
+
     @GetMapping
     public Iterable<User> getAllUsers() {
         return userService.getAllUsers();
@@ -41,10 +55,10 @@ public class UserController {
 
     // add new user take in the body the username, email, password and then in the method body create a new user
     // and call userService.addNewUser(user) to save the user to the database
-    @PostMapping("/add")
-    public void addUser(@Valid @RequestBody User user) {
-        userService.register(user);
-    }
+    // @PostMapping("/add")
+    // public void addUser(@Valid @RequestBody User user) {
+    //     userService.register(user);
+    // }
 
     @GetMapping("/search-products")
     public ResponseEntity<?> search(
@@ -72,6 +86,13 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: " + e.getMessage());
         }
     }
+
+
+@GetMapping("/version")
+public String version() {
+    return "v1.0 deployed at " + System.currentTimeMillis();
+}
+
 
 
 }

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Map;
 import java.util.Optional;
@@ -37,12 +38,21 @@ public class AuthController {
      * Register a new user and send verification email
      */
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody User user) {
+    public ResponseEntity<String> register(@RequestBody User user, HttpServletRequest request) {
         System.out.println("Registering user: " + user);
         // print all the fields of the user object
         System.out.println("User details: ");
 
-        userService.register(user);
+String scheme = request.getScheme(); // http or https
+    String host = request.getServerName(); // domain or IP
+    int port = request.getServerPort(); // port number
+
+    
+     String baseUrl = scheme + "://" + host + ":" + port + "/user";
+    System.out.println("Base URL = " + baseUrl); // Use this in verification email
+
+    userService.register(user, baseUrl); // Pass it down
+
         if ("MERCHANT".equalsIgnoreCase(user.getRole().toString())) {
             System.out.println("ALOOOOOO YASTAAAA");
             merchantProducer.sendMerchantCreatedEvent(user);

@@ -5,6 +5,6 @@ metadata:
 spec:
   selector: { app: merchant-service }
   ports:
-    - port: 80
+    - port: 8080
       targetPort: 8084
   type: ClusterIP

@@ -5,6 +5,8 @@ import com.example.UserService.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 public class UserService {
@@ -30,6 +32,8 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Value("${verification-url-base}")
+    private String verificationUrlBase;
 
 
     // get all users
@@ -44,7 +48,7 @@ public class UserService {
     private EmailService emailService;
 //    private final PasswordEncoder passwordEncoder; // e.g., BCryptPasswordEncoder
 
-    public void register(User user) {
+    public void register(User user, String baseUrl) {
         // 1. Check if email already exists
         if (userRepository.findByEmail(user.getEmail()) != null) {
             throw new IllegalStateException("Email already in use");
@@ -64,7 +68,7 @@ public class UserService {
         String token = jwtService.generateToken(user.getUserId(), user.getEmail());
 
         // 5. Build verification link
-        String verificationLink = userServiceUrl + "/auth/verify?token=" + token;
+        String verificationLink = baseUrl + "/auth/verify?token=" + token;
 
         // 6. Send email
         String emailContent = buildVerificationEmail(user.getName(), verificationLink);
@@ -82,5 +86,15 @@ public class UserService {
 
                Thank you!
                """.formatted(username, link);
+    }
+
+    @Transactional
+    public boolean deleteUser(String mail){
+        User user = userRepository.findByEmail(mail);
+        if (user == null) {
+            throw new IllegalStateException("User with email " + mail + " does not exist");
+        }
+        userRepository.deleteByEmail(mail);
+        return true; // User deleted successfully
     }
 }

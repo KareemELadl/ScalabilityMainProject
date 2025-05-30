@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: transaction-service
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: transaction-service
@@ -14,12 +14,14 @@ spec:
     spec:
       containers:
         - name: transaction-service
-          image: adhamalyy/transaction-service:23-fixed
+          image: kareemeladl/transaction-service:1.0
           ports:
             - containerPort: 8083
           env:
+            - name: SERVER_PORT
+              value: "8083"
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://postgres:5432/transactionsService
+              value: jdbc:postgresql://postgres:5432/customer_db
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -30,5 +32,11 @@ spec:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_PASSWORD
-            - name: SPRING_RABBITMQ_HOST
+            - name: REDIS_HOST
+              value: redis
+            - name: RABBITMQ_HOST
               value: rabbitmq
+            - name: USER_SERVICE_URL
+              value: http://user-service:8080
+            - name: APP_DOMAIN_URL
+              value: http://transaction-service:8080

@@ -49,6 +49,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=1234
       - REDIS_HOST=redis
       - RABBITMQ_HOST=rabbitmq
+      - VERIFICATION_URL_BASE=http://api-gateway:8080/user
     depends_on:
       - redis
       - rabbitmq
@@ -118,6 +119,7 @@ services:
       - USER_SERVICE_URL=http://user-service:8081
       - SEARCH_SERVICE_URL=http://search-service:8082
       - MERCHANT_SERVICE_URL=http://merchant-service:8084
+      - TRANSACTION_SERVICE_URL=http://transaction-service:8083
     depends_on:
       - user-service
       - search-service

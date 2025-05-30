@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: merchant-service
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: merchant-service
@@ -14,12 +14,14 @@ spec:
     spec:
       containers:
         - name: merchant-service
-          image: adhamalyy/merchant-service:1.0
+          image: kareemeladl/merchant-service:1.0
           ports:
             - containerPort: 8084
           env:
+            - name: SERVER_PORT
+              value: "8084"
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://postgres:5432/merchant_db
+              value: jdbc:postgresql://postgres:5432/customer_db
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -30,5 +32,7 @@ spec:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_PASSWORD
-            - name: SPRING_RABBITMQ_HOST
+            - name: REDIS_HOST
+              value: redis
+            - name: RABBITMQ_HOST
               value: rabbitmq

@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: user-service
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: user-service
@@ -14,12 +14,18 @@ spec:
     spec:
       containers:
         - name: user-service
-          image: adhamalyy/user-service:1.0
+          image: kareemeladl/user-service:1.0.8
+          imagePullPolicy: Always
+
           ports:
             - containerPort: 8081
           env:
+            - name: SERVER_PORT
+              value: "8081"
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://postgres:5432/userservice
+              value: jdbc:postgresql://postgres:5432/customer_db
+            - name: VERIFICATION_URL_BASE
+              value: http://api-gateway-service/user
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -30,5 +36,13 @@ spec:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_PASSWORD
-            - name: SPRING_RABBITMQ_HOST
+            - name: REDIS_HOST
+              value: redis
+            - name: RABBITMQ_HOST
               value: rabbitmq
+            - name: MERCHANT_SERVICE_URL
+              value: http://merchant-service:8080
+            - name: SEARCH_SERVICE_URL
+              value: http://search-service:8080
+            - name: USER_SERVICE_URL
+              value: http://user-service:8080

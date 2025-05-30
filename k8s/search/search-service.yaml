@@ -5,6 +5,6 @@ metadata:
 spec:
   selector: { app: search-service }
   ports:
-    - port: 80
+    - port: 8080
       targetPort: 8082
   type: ClusterIP

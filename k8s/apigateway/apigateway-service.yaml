@@ -5,8 +5,9 @@ metadata:
 spec:
   type: NodePort
   selector:
-    app: api-gateway-service
+    app: api-gateway
   ports:
-    - port: 80
-      targetPort: 8080
-      nodePort: 30050
+    - name: http
+      port: 80
+      targetPort: 8080  # 👈 VERY IMPORTANT!
+      nodePort: 30050   # optional, or let K8s assign it
