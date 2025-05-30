@@ -26,4 +26,5 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     // delete user by mail
     void deleteByEmail(String email);
 
+// final
 }
