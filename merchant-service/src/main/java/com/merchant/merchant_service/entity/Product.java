@@ -43,6 +43,20 @@ public class Product {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+
+@Column(name = "price_after_discount", precision = 10, scale = 2, nullable = false)
+private BigDecimal priceAfterDiscount;
+
+public BigDecimal getPriceAfterDiscount() {
+    return priceAfterDiscount;
+}
+
+public void setPriceAfterDiscount(BigDecimal priceAfterDiscount) {
+    this.priceAfterDiscount = priceAfterDiscount;
+    recalculatePriceAfterDiscount();
+}
+
+
     public Product() {}
 
     public Product(Merchant merchant, String name, String description, BigDecimal price, Integer stock,Integer discount , ProductCategory category) {
@@ -53,6 +67,11 @@ public class Product {
         this.stock = stock != null ? stock : 0;
         this.discount= discount != null ? discount : 0;
         this.category = category;
+        BigDecimal hundred = BigDecimal.valueOf(100);
+    BigDecimal discountAmount = price.multiply(BigDecimal.valueOf(this.discount)).divide(hundred);
+    this.priceAfterDiscount = price.subtract(discountAmount);
+
+    
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -134,6 +153,7 @@ public class Product {
     }
     public void setDiscount(Integer discount) {
         this.discount = discount;
+        recalculatePriceAfterDiscount();
     }
 
     public void setCategory(ProductCategory category) {
@@ -147,4 +167,16 @@ public class Product {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    private void recalculatePriceAfterDiscount() {
+    if (this.price != null && this.discount != null) {
+        BigDecimal hundred = BigDecimal.valueOf(100);
+        BigDecimal discountAmount = this.price.multiply(BigDecimal.valueOf(this.discount)).divide(hundred);
+        this.priceAfterDiscount = this.price.subtract(discountAmount);
+    }
+    else {
+        this.priceAfterDiscount = BigDecimal.ZERO; // Default value if price or discount is null
+    }
+    }
 }
+

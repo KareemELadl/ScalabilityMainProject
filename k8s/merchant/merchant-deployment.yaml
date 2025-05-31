@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: merchant-service
-          image: kareemeladl/merchant-service:1.0
+          image: kareemeladl/merchant-service:1.0.2
           ports:
             - containerPort: 8084
           env:
