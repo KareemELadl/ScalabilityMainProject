@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: user-service
-          image: kareemeladl/user-service:1.0.8
+          image: kareemeladl/user-service:1.0.9
           imagePullPolicy: Always
 
           ports:

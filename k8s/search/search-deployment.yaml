@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: search-service
-          image: kareemeladl/search-service:1.0
+          image: kareemeladl/search-service:1.0.4
           ports:
             - containerPort: 8082
           env:

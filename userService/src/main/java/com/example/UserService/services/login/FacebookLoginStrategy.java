@@ -31,6 +31,7 @@ public class FacebookLoginStrategy implements LoginStrategy {
             user.setPassword("facebook"); // placeholder
             user.setEmailVerified(true);  // Facebook = auto-verified
             user.setRole(User.Role.CLIENT);
+            user.setPhoneNumber("01000000");
             userRepository.save(user);
         }
 

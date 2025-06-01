@@ -35,6 +35,17 @@ public class ProductEventConsumer {
         return product;
     }
 
+
+    private Comparator<Product> getSortComparator(String query) {
+        if (query.contains("sort:price_asc")) {
+            return Comparator.comparing(Product::getPriceAfterDiscount);
+        } else if (query.contains("sort:price_desc")) {
+            return Comparator.comparing(Product::getPriceAfterDiscount).reversed();
+        }
+        return null;
+    }
+
+
     private boolean doesProductMatchQuery(Product product, String queryKey) {
         String lowerQuery = queryKey.toLowerCase();
 
@@ -61,25 +72,33 @@ public class ProductEventConsumer {
 
     @RabbitListener(queues = RabbitMQConfig.PRODUCT_CREATE_QUEUE)
     public void handleProductCreate(ProductDTO dto) {
+        try {
         Product product = convertToProduct(dto);
         System.out.println("📦 Received CREATE product: " + product);
 
         Set<String> keys = redisTemplate.keys("*");
         if (keys != null) {
             for (String key : keys) {
+                System.out.println("🔍 Checking key: " + key);
                 if (doesProductMatchQuery(product, key)) {
                     try {
+                        System.out.println("✅ Adding product to key: " + key);
                         List<Product> cached = redisTemplate.opsForValue().get(key);
                         if (cached == null) cached = new ArrayList<>();
                         cached.add(product);
                         redisTemplate.opsForValue().set(key, cached);
-                    } catch (ClassCastException | SerializationException e) {
+                    } catch (Exception e) {
                         System.err.println("⚠️ CREATE: Skipping corrupt key '" + key + "': " + e.getMessage());
                         // Optionally clean: redisTemplate.delete(key);
                     }
                 }
             }
         }
+    }
+    catch (Exception e) {
+            System.err.println("Error handling product creation: " + e.getMessage());
+    }
+
     }
 
     @RabbitListener(queues = RabbitMQConfig.PRODUCT_UPDATE_QUEUE)
